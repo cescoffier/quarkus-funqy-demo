@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Instaquarm Wall</title>
+
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Pacifico"/>
+
+    <style>
+        body {
+            margin: 0;
+            width: 100%;
+            font-family: 'Red Hat Text', sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: blue;
+            background-image: linear-gradient(131.83deg, #FFFAFA 0%, #FFF7F7 99.21%);
+        }
+
+        h1 {
+            font-family: Pacifico, fantasy;
+            font-size: 60px;
+            font-style: normal;
+            font-variant: normal;
+            font-weight: 700;
+            line-height: 26.4px;
+            color: blue;
+        }
+
+        .title {
+            text-align: center;
+            padding: 1em;
+        }
+
+        main {
+            display: flex;
+            flex-flow: column wrap;
+            padding-top: 5px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #snapshot {
+            margin-bottom: 10px;
+        }
+
+        #upload {
+            font-size: large;
+        }
+
+        .error {
+            color: indianred;
+            font-size: large;
+        }
+
+    </style>
+
+</head>
+<body>
+<header class="title">
+    <h1>Instaquarm Capture</h1>
+</header>
+<main>
+    <input id="snapshot" type="file" accept="image/*;capture=camera">
+    <button id="upload">Upload!</button>
+
+    <div class="response"></div>
+</main>
+</body>
+
+<script>
+
+    window.onload = () => {
+        let button = document.querySelector("#upload");
+        console.log("button is", button);
+        button.onclick = function () {
+            console.log("click");
+            const image = document.querySelector("#snapshot").files[0];
+
+            image.arrayBuffer().then(r => {
+                const bytes = _arrayBufferToBase64(r);
+                const req = {
+                    'image': bytes
+                };
+                fetch('https://rz5geru9b3.execute-api.eu-north-1.amazonaws.com/prod', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(req)
+                })
+                    .then(response => {
+                        console.log(JSON.stringify(response), "Response status", response.status);
+                        document.querySelector("#snapshot").value = null;
+                        if (response.status === 200) {
+                            document.querySelector(".response").innerHTML = '<p class="success">Picture uploaded!</p>'
+                        } else {
+                            document.querySelector(".response").innerHTML = '<p class="error">Failed with ' + response.status + '</p>'
+                        }
+                    })
+            })
+        }
+    }
+
+    function _arrayBufferToBase64(buffer) {
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return window.btoa(binary);
+    }
+
+</script>
+
+</html>
